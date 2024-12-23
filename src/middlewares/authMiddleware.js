@@ -1,10 +1,30 @@
-module.exports = (req, res, next) => {
-  const authToken = req.headers['authorization'];
-  if (!authToken) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  // Add token validation logic here
-  
+const axios = require('axios');
+const config = require('../config/services.json');
 
-  next();
+const validateTokenAndPermissions = async (req, res, next) => {
+  const token = req.header('Authorization')?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Acceso denegado: Token no proporcionado' });
+  }
+
+  try {
+    const response = await axios.post(config.authorization.target, {
+      requiredPermission: req.requiredPermission || ''
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (response.status === 200) {
+      next();
+    } else {
+      res.status(403).json({ message: 'Permiso denegado' });
+    }
+  } catch (error) {
+    res.status(401).json({ message: 'Token inválido o expirado' });
+  }
 };
+
+module.exports = validateTokenAndPermissions;

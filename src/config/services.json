@@ -1,7 +1,7 @@
 {
-  "authorization": {
-    "path": "/api/authorization",
-    "target": "http://localhost:6000/api/authorization",
+"authorization": {
+    "path": "/api/authorization/validate",
+    "target": "http://localhost:6000/api/authorization/validate",
     "methods": ["POST"]
   },
   "login": {
