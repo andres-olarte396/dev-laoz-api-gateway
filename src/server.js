@@ -13,9 +13,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.LOCAL_PORT || 3002;
 
-// app.use(express.json({ limit: '10mb' }));
-// app.use(express.urlencoded({ extended: true }));
-
 // Middleware para analizar JSON
 app.use(bodyParser.json({ limit: '10mb' })); // Ajusta el límite si necesitas más
 app.use(bodyParser.urlencoded({ extended: true }));
