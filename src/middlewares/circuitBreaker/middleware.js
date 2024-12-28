@@ -12,16 +12,27 @@ const circuitBreakerMiddleware = (services) => async (req, res, next) => {
   const circuitBreaker = getCircuitBreaker(serviceName);
 
   try {
-    const response = await circuitBreaker.fire({
+    // Preparar la solicitud para el microservicio
+    const request = {
       url: serviceUrl + req.path.replace('/' + serviceName, ''),
+      params: req.query,
       method: req.method,
       data: req.body,
-      headers: req.headers,
-    });
+      headers: {
+        ...req.headers,
+        host: serviceUrl.replace(/^https?:\/\//, '')
+      },
+    };
 
-    return res.status(200).json(response.data);
+    const response = await circuitBreaker.fire(request);
+    return res.status(response?.status || 200).json(response?.data);
   } catch (error) {
-    return res.status(500).json(error);
+    console.error(`[Circuit Breaker] Error al llamar al servicio ${serviceName}:`, error.message);
+
+    const statusCode = error.response?.status || 500;
+    const errorData = error.response?.data || { error: 'Error interno del servidor' };
+
+    return res.status(statusCode).json(errorData);
   }
 };
 
