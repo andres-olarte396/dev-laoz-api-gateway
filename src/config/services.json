@@ -1,17 +1,26 @@
 {
-"authorization": {
-    "path": "/api/authorization/validate",
-    "target": "http://localhost:6000/api/authorization/validate",
-    "methods": ["POST"]
-  },
   "login": {
+    "folder": "dev-laoz-authentication-api",
     "path": "/api/auth/login",
     "target": "http://localhost:4000/api/auth/login",
     "methods": ["POST"]
   },
-  "register": {
+  "authorization": {
+    "folder": "dev-laoz-authorization-api",
+    "path": "/api/authorization/validate",
+    "target": "http://localhost:5000/api/authorization/validate",
+    "methods": ["POST"]
+  },
+  "registerUser": {
+    "folder": "dev-laoz-api-user",
     "path": "/api/user/register",
     "target": "http://localhost:6000/api/user/register",
+    "methods": ["POST"]
+  },
+  "secrets": {
+    "folder": "dev-laoz-api-secrets",
+    "path": "/api/secrets",
+    "target": "http://localhost:3500/api/secrets",
     "methods": ["POST"]
   }
 }
