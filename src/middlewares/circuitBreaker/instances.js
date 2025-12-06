@@ -5,8 +5,10 @@ const config = require('./config');
 const circuitBreakers = new Map();
 
 // Función para realizar solicitudes con Axios
+const https = require('https');
 const axiosRequest = async ({ url, method, data, headers }) => {
-  return axios({ url, method, data, headers });
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+  return axios({ url, method, data, headers, httpsAgent });
 };
 
 // Crear o recuperar una instancia de Circuit Breaker
