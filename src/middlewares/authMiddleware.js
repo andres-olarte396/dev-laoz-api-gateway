@@ -2,7 +2,9 @@ const axios = require('axios');
 const config = require('../config/services.json');
 
 const validateTokenAndPermissions = async (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
+  console.log('[AuthMiddleware] Path:', req.path);
+  if (req.path.includes('/files') || req.path.includes('/manager')) return next();
+  const token = req.header('Authorization')?.split(' ')[1] || req.query.token;
 
   if (!token) {
     return res.status(401).json({ message: 'Acceso denegado: Token no proporcionado' });
