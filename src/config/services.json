@@ -2,25 +2,75 @@
   "login": {
     "folder": "dev-laoz-authentication-api",
     "path": "/api/auth/login",
-    "target": "http://localhost:4000/api/auth/login",
-    "methods": ["POST"]
+    "target": "http://authentication-api:4000/api/auth/login",
+    "methods": [
+      "POST"
+    ]
   },
   "authorization": {
     "folder": "dev-laoz-authorization-api",
     "path": "/api/authorization/validate",
-    "target": "http://localhost:5000/api/authorization/validate",
-    "methods": ["POST"]
+    "target": "http://authorization-api:5000/api/authorization/validate",
+    "methods": [
+      "POST"
+    ]
   },
   "registerUser": {
     "folder": "dev-laoz-api-user",
     "path": "/api/user/register",
-    "target": "http://localhost:6000/api/user/register",
-    "methods": ["POST"]
+    "target": "http://user-api:6000/api/user/register",
+    "methods": [
+      "POST"
+    ]
   },
   "secrets": {
     "folder": "dev-laoz-api-secrets",
     "path": "/api/secrets",
-    "target": "http://localhost:3500/api/secrets",
-    "methods": ["POST"]
+    "target": "https://api-secrets:3501/api/secrets",
+    "methods": [
+      "POST"
+    ],
+    "auth": true
+  },
+  "getSecret": {
+    "folder": "dev-laoz-api-secrets",
+    "path": "/api/secrets/:app",
+    "target": "https://api-secrets:3501/api/secrets",
+    "methods": [
+      "POST"
+    ],
+    "auth": true
+  },
+  "insights": {
+    "folder": "dev-laoz-api-insights",
+    "path": "/api/insights",
+    "target": "http://api-insights:3600/api/insights",
+    "methods": [
+      "POST",
+      "GET"
+    ],
+    "auth": true
+  },
+  "files": {
+    "folder": "dev-laoz-api-files",
+    "path": "/api/files",
+    "target": "http://api-files:3700/api/files",
+    "methods": [
+      "POST",
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "auth": false
+  },
+  "manager": {
+    "folder": "dev-laoz-api-manager",
+    "path": "/api/manager",
+    "target": "http://api-manager:3800/api/manager",
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "auth": true
   }
 }
