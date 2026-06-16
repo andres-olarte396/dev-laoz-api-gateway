@@ -3,74 +3,108 @@
     "folder": "dev-laoz-authentication-api",
     "path": "/api/auth/login",
     "target": "http://authentication-api:4000/api/auth/login",
-    "methods": [
-      "POST"
-    ]
+    "methods": ["POST"]
+  },
+  "authRefresh": {
+    "folder": "dev-laoz-authentication-api",
+    "path": "/api/auth/refresh",
+    "target": "http://authentication-api:4000/api/auth/refresh",
+    "methods": ["POST"]
+  },
+  "authLogout": {
+    "folder": "dev-laoz-authentication-api",
+    "path": "/api/auth/logout",
+    "target": "http://authentication-api:4000/api/auth/logout",
+    "methods": ["POST"],
+    "auth": true
+  },
+  "authVerify": {
+    "folder": "dev-laoz-authentication-api",
+    "path": "/api/auth/verify",
+    "target": "http://authentication-api:4000/api/auth/verify",
+    "methods": ["GET"],
+    "auth": true
   },
   "authorization": {
     "folder": "dev-laoz-authorization-api",
     "path": "/api/authorization/validate",
     "target": "http://authorization-api:5000/api/authorization/validate",
-    "methods": [
-      "POST"
-    ]
+    "methods": ["POST"],
+    "auth": true
   },
-  "registerUser": {
+  "users": {
     "folder": "dev-laoz-api-user",
-    "path": "/api/user/register",
-    "target": "http://user-api:6000/api/user/register",
-    "methods": [
-      "POST"
-    ]
+    "path": "/api/user",
+    "target": "http://user-api:6000/api/user",
+    "methods": ["GET", "POST"],
+    "auth": false
+  },
+  "userById": {
+    "folder": "dev-laoz-api-user",
+    "path": "/api/user/:id",
+    "target": "http://user-api:6000/api/user",
+    "methods": ["GET", "PUT", "DELETE"],
+    "auth": true
+  },
+  "roles": {
+    "folder": "dev-laoz-api-roles",
+    "path": "/api/roles",
+    "target": "http://api-roles:5002/api/roles",
+    "methods": ["GET", "POST"],
+    "auth": true
+  },
+  "rolesCheck": {
+    "folder": "dev-laoz-api-roles",
+    "path": "/api/roles/check",
+    "target": "http://api-roles:5002/api/roles/check",
+    "methods": ["POST"]
+  },
+  "roleById": {
+    "folder": "dev-laoz-api-roles",
+    "path": "/api/roles/:id",
+    "target": "http://api-roles:5002/api/roles",
+    "methods": ["GET", "PUT", "DELETE"],
+    "auth": true
   },
   "secrets": {
     "folder": "dev-laoz-api-secrets",
     "path": "/api/secrets",
     "target": "https://api-secrets:3501/api/secrets",
-    "methods": [
-      "POST"
-    ],
+    "methods": ["POST"],
     "auth": true
   },
-  "getSecret": {
-    "folder": "dev-laoz-api-secrets",
-    "path": "/api/secrets/:app",
-    "target": "https://api-secrets:3501/api/secrets",
-    "methods": [
-      "POST"
-    ],
-    "auth": true
-  },
-  "insights": {
+  "insightsIngest": {
     "folder": "dev-laoz-api-insights",
     "path": "/api/insights",
     "target": "http://api-insights:3600/api/insights",
-    "methods": [
-      "POST",
-      "GET"
-    ],
+    "methods": ["POST"]
+  },
+  "insightsQuery": {
+    "folder": "dev-laoz-api-insights",
+    "path": "/api/insights",
+    "target": "http://api-insights:3600/api/insights",
+    "methods": ["GET"],
     "auth": true
   },
   "files": {
     "folder": "dev-laoz-api-files",
     "path": "/api/files",
     "target": "http://api-files:3700/api/files",
-    "methods": [
-      "POST",
-      "GET",
-      "PUT",
-      "DELETE"
-    ],
-    "auth": false
+    "methods": ["POST", "GET", "PUT", "DELETE"],
+    "auth": true
   },
   "manager": {
     "folder": "dev-laoz-api-manager",
     "path": "/api/manager",
     "target": "http://api-manager:3800/api/manager",
-    "methods": [
-      "GET",
-      "POST"
-    ],
+    "methods": ["GET", "POST"],
+    "auth": true
+  },
+  "billing": {
+    "folder": "dev-laoz-billing-api",
+    "path": "/api/billing",
+    "target": "http://billing-api:3004/api/billing",
+    "methods": ["GET", "POST"],
     "auth": true
   }
 }

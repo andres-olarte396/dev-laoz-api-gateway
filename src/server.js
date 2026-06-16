@@ -3,8 +3,9 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+const { rateLimitMiddleware } = require('@dev-laoz/core');
+
 const cacheMiddleware = require('./middlewares/cacheMiddleware');
-const rateLimitMiddleware = require('./middlewares/rateLimitMiddleware');
 const authMiddleware = require('./middlewares/authMiddleware');
 const circuitBreakerMiddleware = require('./middlewares/circuitBreaker/middleware');
 const services = require('./config/servicesConfig');

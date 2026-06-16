@@ -1,4 +1,4 @@
-const logger = require('../config/logger');
+const { logger } = require('@dev-laoz/core');
 
 const httpLoggerMiddleware = (req, res, next) => {
     const start = Date.now();

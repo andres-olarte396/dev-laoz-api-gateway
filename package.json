@@ -8,11 +8,11 @@
     "dev": "node --inspect src/server.js"
   },
   "dependencies": {
+    "@dev-laoz/core": "file:../dev-laoz-config-loader",
     "axios": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.18.2",
-    "express-rate-limit": "^7.5.0",
     "http-proxy-middleware": "^2.0.6",
     "node-cache": "^5.1.2",
     "opossum": "^8.4.0"

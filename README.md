@@ -1,143 +1,136 @@
-# API Gateway
+# dev-laoz-api-gateway
 
-Este proyecto implementa un **API Gateway** que actúa como punto de entrada central para varios microservicios. El Gateway redirige las solicitudes a los microservicios correspondientes, incluyendo la API de autenticación para gestionar usuarios, roles y permisos.
+Punto de entrada unico para todo el trafico externo del ecosistema Dev Laoz. Recibe cada peticion HTTP, aplica una cadena de middlewares (logging, CORS, rate limiting, autenticacion y cache) y la reenvía al microservicio correspondiente mediante un circuit breaker. Expuesto en el puerto `9000` del host; internamente escucha en el puerto `3002`.
 
-## **Estructura del Proyecto**
+## Posicion en la arquitectura
 
-```plaintext
-api-gateway/
-├── config/
-│   └── routes.json         # Configuración de rutas y servicios
-├── routes/
-│   └── index.js            # Middleware para enrutar solicitudes a servicios
-├── server.js               # Archivo principal que configura y corre el servidor
-├── package.json            # Dependencias y scripts del proyecto
-└── .env                    # Variables de entorno (opcional)
+```mermaid
+flowchart LR
+    Cliente["Cliente (navegador / app)"]
+    GW["api-gateway :9000"]
+    Auth["authentication-api :4000"]
+    Authz["authorization-api :5000"]
+    User["user-api :6000"]
+    Roles["api-roles :5002"]
+    Secrets["api-secrets :3501"]
+    Insights["api-insights :3600"]
+    Files["api-files :3700"]
+    Manager["api-manager :3800"]
+    Billing["billing-api :3004"]
+
+    Cliente -->|HTTPS/HTTP| GW
+    GW -->|proxy| Auth
+    GW -->|validate JWT| Authz
+    GW -->|proxy| User
+    GW -->|proxy| Roles
+    GW -->|proxy HTTPS| Secrets
+    GW -->|proxy / SSE| Insights
+    GW -->|proxy| Files
+    GW -->|proxy| Manager
+    GW -->|proxy| Billing
 ```
 
-## **Instalación**
+## Flujo de negocio
 
-1. Clona este repositorio:
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant GW as api-gateway
+    participant AZ as authorization-api
+    participant SVC as Microservicio destino
 
-   ```bash
-   git clone <URL_DEL_REPOSITORIO>
-   cd api-gateway
-   ```
-
-2. Instala las dependencias:
-
-   ```bash
-   npm install
-   ```
-
-3. (Opcional) Configura las variables de entorno en un archivo `.env` si es necesario.
-
-4. Inicia el servidor:
-
-   ```bash
-   npm start
-   ```
-
-   El API Gateway correrá en el puerto configurado (por defecto `3000`).
-
-## **Rutas**
-
-El API Gateway enruta las solicitudes a los microservicios configurados en el archivo `routes.json`. A continuación se detallan las rutas disponibles para la API de autenticación:
-
-### **Rutas de Autenticación**
-
-El API Gateway redirige las siguientes rutas a la API de autenticación que corre en `http://localhost:5000/api/auth`:
-
-- `POST /api/auth/register`: Registra un nuevo usuario. 
-- `POST /api/auth/login`: Inicia sesión y devuelve un token JWT.
-- `GET /api/auth/read`: Accede a un recurso protegido (requiere token JWT).
-- `POST /api/auth/write`: Accede a un recurso de escritura (requiere token JWT y permiso `write`).
-- `DELETE /api/auth/delete`: Elimina un recurso (requiere token JWT y permiso `delete`).
-
-### **Estructura de las Rutas**
-
-La configuración de las rutas se encuentra en el archivo `src/config/routes.json`. Este archivo contiene la información de los servicios a los que el API Gateway debe enrutar las solicitudes. Aquí un ejemplo:
-
-```json
-{
-  "auth": {
-    "path": "/api/auth",
-    "target": "http://localhost:5000/api/auth",
-    "methods": ["GET", "POST", "DELETE", "PUT"]
-  },
-  "otherService": {
-    "path": "/api/other-service",
-    "target": "http://localhost:4000/api",
-    "methods": ["GET", "POST"]
-  }
-}
+    C->>GW: HTTP request con Authorization: Bearer <token>
+    GW->>GW: httpLoggerMiddleware (log a api-insights)
+    GW->>GW: cors() — valida origen
+    GW->>GW: bodyParser — parsea JSON/urlencoded
+    GW->>GW: rateLimitMiddleware — verifica cuota
+    GW->>AZ: POST /api/authorization/validate {token}
+    AZ-->>GW: 200 OK / 401 / 403
+    GW->>GW: cacheMiddleware — busca respuesta en cache
+    GW->>GW: circuitBreakerMiddleware — evalua estado del servicio
+    GW->>SVC: peticion reenviada
+    SVC-->>GW: respuesta
+    GW-->>C: respuesta (guardada en cache si aplica)
 ```
 
-## **Desarrollo Local**
+## Stack tecnico
 
-Para desarrollar localmente, asegúrate de tener corriendo la **API de autenticación** en el puerto `5000` o el puerto configurado en el archivo `routes.json`. Si tienes otros microservicios, asegúrate de que estén también corriendo en los puertos correspondientes.
+| Componente | Libreria / Version |
+| --- | --- |
+| Runtime | Node.js 18+ |
+| Framework | Express.js |
+| Proxy | http-proxy-middleware |
+| Circuit breaker | opossum (via @dev-laoz/core) |
+| Cache | node-cache (TTL 60 s) |
+| Rate limiting | @dev-laoz/core rateLimitMiddleware |
+| Variables de entorno | dotenv |
+| Parsing | body-parser |
 
-### **Cómo probar las rutas**
+## Prerrequisitos
 
-1. **Registrar un Usuario**
+- Node.js 18 o superior
+- Acceso de red a todos los microservicios destino (en Docker: misma red)
+- Los servicios `authorization-api` y `api-insights` deben estar activos para que el gateway funcione correctamente
 
-   ```bash
-   curl -X POST http://localhost:3000/api/auth/register \
-   -H "Content-Type: application/json" \
-   -d '{"username": "testuser", "password": "password123", "role": "user", "permissions": ["read"]}'
-   ```
+## Variables de entorno
 
-2. **Iniciar Sesión**
+| Variable | Descripcion | Valor en Docker |
+| --- | --- | --- |
+| `LOCAL_PORT` | Puerto interno del proceso | `3002` |
+| `CORS_ORIGIN` | Origen permitido por CORS | `http://localhost:8080` |
+| `NODE_ENV` | Entorno de ejecucion | `production` |
 
-   ```bash
-   curl -X POST http://localhost:3000/api/auth/login \
-   -H "Content-Type: application/json" \
-   -d '{"username": "testuser", "password": "password123"}'
-   ```
+## Instalacion y ejecucion local
 
-3. **Acceder a una Ruta Protegida**
+```bash
+# Instalar dependencias
+npm install
 
-   (Reemplaza `<TOKEN>` con el JWT recibido en el inicio de sesión)
-   ```bash
-   curl -X GET http://localhost:3000/api/auth/read \
-   -H "Authorization: Bearer <TOKEN>"
-   ```
+# Desarrollo con recarga automatica
+npm run dev
 
----
-
-## **Desarrollo y Personalización**
-
-### **Agregar Nuevas Rutas**
-
-Las rutas del API Gateway se configuran en el archivo `src/config/routes.json`. Si deseas agregar un nuevo servicio, simplemente sigue el formato JSON y agrega el nuevo objeto en el archivo.
-
-Ejemplo de cómo agregar un nuevo microservicio:
-
-```json
-{
-  "newService": {
-    "path": "/api/new-service",
-    "target": "http://localhost:6000/api",
-    "methods": ["GET", "POST"]
-  }
-}
+# Produccion
+npm start
 ```
 
-### **Middleware y Logs**
+El servicio iniciara en `http://localhost:3002`. Para acceder desde fuera del entorno Docker exponer el puerto `9000`.
 
-El API Gateway también permite agregar middleware para manejar errores, autenticación o logging. Si usas herramientas como **Winston** o **Prometheus**, puedes añadir el código necesario para recopilar métricas y logs de las solicitudes.
+## Endpoints
 
----
+El gateway no tiene controladores propios: cada ruta `/api/*` se delega al microservicio configurado en `src/config/services.json`.
 
-## **Tecnologías Utilizadas**
+| Metodo | Ruta | Auth | Descripcion |
+| --- | --- | --- | --- |
+| GET | `/health` | No | Healthcheck del gateway |
+| POST | `/api/auth/login` | No | Inicio de sesion (→ authentication-api) |
+| POST | `/api/auth/refresh` | No | Renovar token JWT (→ authentication-api) |
+| POST | `/api/auth/logout` | Si | Cerrar sesion (→ authentication-api) |
+| GET | `/api/auth/verify` | Si | Verificar token (→ authentication-api) |
+| POST | `/api/authorization/validate` | Si | Validar permisos (→ authorization-api) |
+| GET | `/api/user` | No | Listar usuarios (→ user-api) |
+| POST | `/api/user` | No | Registrar usuario (→ user-api) |
+| GET/PUT/DELETE | `/api/user/:id` | Si | Operaciones sobre usuario (→ user-api) |
+| GET/POST | `/api/roles` | Si | Listar / crear roles (→ api-roles) |
+| POST | `/api/roles/check` | No | Verificacion interna de roles (→ api-roles) |
+| GET/PUT/DELETE | `/api/roles/:id` | Si | Operaciones sobre rol (→ api-roles) |
+| POST | `/api/secrets` | Si | Gestion de secretos HTTPS (→ api-secrets:3501) |
+| POST | `/api/insights` | No | Ingestion de eventos (→ api-insights) |
+| GET | `/api/insights` | Si | Consulta de eventos (→ api-insights) |
+| GET | `/api/insights/stream` | Si | Stream SSE — bypass de circuit breaker (→ api-insights) |
+| GET/POST/PUT/DELETE | `/api/files` | Si | Gestion de archivos (→ api-files) |
+| GET/POST | `/api/manager` | Si | Gestion de contenedores y repos (→ api-manager) |
+| GET/POST | `/api/billing` | Si | Pagos y suscripciones (→ billing-api) |
 
-- **Node.js**: Plataforma de backend para ejecutar el API Gateway.
-- **Express.js**: Framework para crear el servidor y enrutar las solicitudes.
-- **http-proxy-middleware**: Biblioteca para redirigir las solicitudes a otros servicios.
-- **dotenv**: Para manejar variables de entorno de forma segura.
+> **Nota SSE:** `/api/insights/stream` utiliza `http-proxy-middleware` directamente y omite el circuit breaker para mantener la conexion persistente.
 
----
+## Integracion con otros servicios
 
-## **Licencia**
+- **authorization-api** — cada peticion autenticada realiza un POST interno a `/api/authorization/validate` antes de llegar al servicio destino.
+- **api-insights** — `httpLoggerMiddleware` envia un registro de cada peticion HTTP.
+- **Todos los demas servicios** — el gateway actua como unico punto de contacto; los clientes nunca llaman a los microservicios directamente.
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+## Swagger / API Docs
+
+El gateway es un proxy puro y no genera documentacion Swagger propia. La documentacion de cada API se encuentra en el `docs/API.md` del servicio correspondiente y en su endpoint `/api-docs` (cuando esta habilitado).
+
+Para la tabla completa de rutas del gateway ver `docs/API.md`.
