@@ -8,7 +8,14 @@ const circuitBreakers = new Map();
 const https = require('https');
 const axiosRequest = async ({ url, method, data, headers }) => {
   const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-  return axios({ url, method, data, headers, httpsAgent });
+  return axios({
+    url,
+    method,
+    data,
+    headers,
+    httpsAgent,
+    validateStatus: () => true,
+  });
 };
 
 // Crear o recuperar una instancia de Circuit Breaker
@@ -17,7 +24,10 @@ const getCircuitBreaker = (serviceName) => {
     const breaker = new CircuitBreaker(axiosRequest, config);
 
     breaker.fallback(() => ({
-      error: `Service ${serviceName} is currently unavailable. Please try again later.`,
+      status: 503,
+      data: {
+        error: `Service ${serviceName} is currently unavailable. Please try again later.`,
+      },
     }));
 
     breaker.on('open', () => {

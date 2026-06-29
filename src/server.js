@@ -22,7 +22,7 @@ app.use(httpLoggerMiddleware);
 
 // Habilitar CORS para permitir peticiones desde el frontend
 app.use(cors({
-  origin: 'http://localhost:8080',
+  origin: true,
   credentials: true
 }));
 
